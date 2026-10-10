@@ -130,7 +130,7 @@
   .hint-row { flex-direction: column; gap: 3px; }
 }
 
-/* The light theme follows the original warm Talky reference. */
+/* The light theme follows the original warm Bunny reference. */
 .light-theme {
   background: #f5f0e7;
   color: #1f2d39;
@@ -148,6 +148,7 @@
 .light-theme .history-item-copy small, .light-theme .empty-history { color: #8b98a7; }
 .light-theme .history-icon { color: #4ca6df; }
 .light-theme .main-column { background: #f5f0e7; }
+.light-theme .main-column { background: linear-gradient(180deg, rgba(255, 248, 218, 0.72), rgba(231, 245, 224, 0.78)), radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.84) 0 5%, transparent 20%), radial-gradient(circle at 88% 72%, rgba(180, 224, 177, 0.5), transparent 28%), #d9edcf; }
 .light-theme .topbar { border-bottom: 0; }
 .light-theme .menu-button { color: #263b4f; }
 .light-theme .brand-copy h1 { color: #1d2a35; font-size: clamp(2.2rem, 2.8vw, 3.2rem); font-weight: 900; letter-spacing: -0.07em; }
@@ -162,6 +163,64 @@
 .light-theme .welcome-panel h3 { color: #243445; font-size: 1.15rem; }
 .light-theme .welcome-panel p { color: #7a8797; font-size: 0.94rem; }
 .light-theme .chat-area { min-height: clamp(420px, 58vh, 760px); max-height: none; padding: 18px 8px 10px; background: rgba(246, 248, 250, 0.5); border-color: rgba(135, 145, 159, 0.15); border-radius: 22px; }
+
+html, body, #root { width: 100%; max-width: 100%; overflow-x: hidden; }
+.light-theme.app-shell { width: 100%; max-width: 100%; min-height: 100vh; overflow-x: hidden; background-image: linear-gradient(rgba(255, 248, 220, 0.08), rgba(255, 248, 220, 0.08)), url("/kidbg.png"); background-position: center; background-size: cover; background-attachment: fixed; background-repeat: no-repeat; }
+.light-theme .main-column { width: 100%; max-width: 100%; min-height: 100vh; background: transparent; }
+.light-theme .topbar { min-height: 68px; padding: 10px 64px; }
+.light-theme .brand-copy h1 { font-size: clamp(2rem, 3vw, 2.35rem); letter-spacing: -0.04em; }
+.light-theme .brand-copy span { font-size: 0.78rem; }
+.light-theme .chat-panel { width: min(760px, calc(100vw - 32px)); max-width: 100%; height: min(700px, calc(100svh - 96px)); min-height: min(580px, calc(100svh - 96px)); margin: 8px auto 20px; padding: 14px 16px 15px; overflow: hidden; border: 1px solid rgba(243, 243, 243, 0.78); border-radius: 20px; background: rgba(255, 255, 255, 0.87); box-shadow: 0 20px 50px rgba(76, 105, 82, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
+.light-theme .chat-area { flex: 1 1 auto; min-height: 0; padding: 10px 0 2px; overflow-y: auto; overflow-x: hidden; background: transparent; box-shadow: none; border-radius: 0; }
+.light-theme .timeline { margin-bottom: 18px; }
+.light-theme .message-row { margin-bottom: 18px; }
+.light-theme .assistant-bubble, .light-theme .user-bubble { font-size: 0.78rem; }
+.light-theme .assistant-bubble { padding: 10px 13px; }
+.light-theme .user-bubble { padding: 9px 14px; }
+.light-theme .composer-wrap { width: 440px; max-width: 100%; }
+.light-theme .composer-box { padding: 6px 9px 6px 14px; }
+.light-theme .hint-row { display: none; }
+
+.bunny-stage { position: relative; display: flex; align-items: center; justify-content: center; flex: 0 0 clamp(240px, 30vh, 320px); width: 100%; max-width: 100%; height: clamp(240px, 30vh, 320px); min-height: 0; margin: 8px 0 14px; overflow: hidden; border-radius: 11px; background-image: url("/kidbg.png"); background-position: center; background-size: cover; background-repeat: no-repeat; }
+.bunny-stage::before { position: absolute; inset: -24px; z-index: 0; pointer-events: none; content: ""; background: inherit; background-position: center; background-size: cover; filter: blur(1px) saturate(1.08); transform: scale(1.08); }
+.bunny-stage::after { position: absolute; inset: 0; z-index: 2; pointer-events: none; content: ""; border-radius: inherit; background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 42%, rgba(87, 142, 73, 0.1)); }
+.bunny-video { position: relative; z-index: 1; display: block; width: auto; height: 100%; max-width: 100%; max-height: 100%; aspect-ratio: 1 / 1; object-fit: contain; object-position: center; border: 0; outline: 0; box-shadow: none; }
+.bunny-status { position: absolute; z-index: 2; top: 12px; left: 14px; display: inline-flex; align-items: center; gap: 8px; max-width: calc(100% - 28px); padding: 7px 11px; border: 1px solid rgba(255, 255, 255, 0.75); border-radius: 999px; background: rgba(255, 255, 255, 0.84); color: #39709d; font-size: 0.72rem; font-weight: 700; box-shadow: 0 5px 14px rgba(54, 97, 125, 0.12); }
+.sound-bars { display: inline-flex; align-items: center; gap: 2px; height: 13px; }
+.sound-bars i { display: block; width: 2px; height: 7px; border-radius: 3px; background: #4caee9; }
+.sound-bars i:nth-child(2) { height: 12px; }
+.sound-bars i:nth-child(3) { height: 9px; }
+.bunny-stage-speaking .sound-bars i { animation: soundBar 0.7s ease-in-out infinite alternate; }
+.bunny-stage-speaking .sound-bars i:nth-child(2) { animation-delay: 0.16s; }
+.bunny-stage-speaking .sound-bars i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes soundBar { from { transform: scaleY(0.55); } to { transform: scaleY(1.12); } }
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .light-theme .chat-panel { width: min(760px, calc(100vw - 40px)); height: min(800px, calc(100svh - 88px)); min-height: min(580px, calc(100svh - 88px)); }
+}
+
+@media (max-width: 760px) {
+  .light-theme .topbar { min-height: 58px; padding-inline: 56px 14px; }
+  .light-theme .brand-copy h1 { font-size: 2rem; }
+  .light-theme .brand-copy span { font-size: 0.75rem; }
+  .light-theme .chat-panel { width: 100%; max-width: 100vw; height: calc(100svh - 72px); min-height: 0; margin: 0; padding: 12px 12px 16px; border-radius: 0; box-shadow: none; }
+  .light-theme .chat-area { min-height: 0; padding: 14px 6px 8px; }
+  .light-theme .bunny-stage { flex-basis: clamp(190px, 31vh, 250px); height: clamp(190px, 31vh, 250px); margin: 5px 0 12px; }
+  .light-theme .composer-wrap { width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .light-theme .topbar { padding-inline: 48px 12px; }
+  .light-theme .brand-copy h1 { font-size: 1.7rem; }
+  .light-theme .brand-copy span { display: none; }
+  .light-theme .theme-toggle { right: 58px; }
+  .light-theme .chat-panel { padding: 10px 10px 13px; }
+  .light-theme .message-row { gap: 6px; margin-bottom: 14px; }
+  .light-theme .assistant-bubble, .light-theme .user-bubble { max-width: 86%; font-size: 0.75rem; }
+  .light-theme .bunny-status { top: 8px; left: 9px; max-width: calc(100% - 18px); font-size: 0.62rem; }
+  .light-theme .composer-box input { font-size: 0.8rem; }
+}
+.light-theme .chat-area { background: transparent; box-shadow: none; border-radius: 0; }
 .light-theme .timeline { color: #758191; }
 .light-theme .assistant-avatar { background: linear-gradient(180deg, #ddc9f8 0%, #c6b4ee 100%); }
 .light-theme .assistant-name { color: #2e3947; }

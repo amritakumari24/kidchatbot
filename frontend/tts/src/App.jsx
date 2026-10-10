@@ -4,8 +4,17 @@ import "./App.css";
 
 const MAX_QUESTIONS = 20;
 const STORAGE_KEY = "talky-chat-history";
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://127.0.0.1:8000" : "https://ai-chatbot-backend-3ifb.onrender.com");
-const suggestedPrompts = ["Tell me a fun fact", "Why is the sky blue?", "Tell me about animals", "Help me learn something new"];
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV
+    ? "http://127.0.0.1:8000"
+    : "https://ai-chatbot-backend-3ifb.onrender.com");
+const suggestedPrompts = [
+  "Tell me a fun fact",
+  "Why is the sky blue?",
+  "Tell me about animals",
+  "Help me learn something new",
+];
 
 const createChat = () => ({
   id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -27,7 +36,9 @@ const readStoredChats = () => {
 
 function App() {
   const [chats, setChats] = useState(readStoredChats);
-  const [activeChatId, setActiveChatId] = useState(() => readStoredChats()[0].id);
+  const [activeChatId, setActiveChatId] = useState(
+    () => readStoredChats()[0].id,
+  );
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -35,22 +46,29 @@ function App() {
   const [speaking, setSpeaking] = useState(false);
   const [speechPaused, setSpeechPaused] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 760);
-  const [theme, setTheme] = useState(() => localStorage.getItem("talky-theme") || "light");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("talky-theme") || "light",
+  );
   const recognitionRef = useRef(null);
   const chatRef = useRef(null);
+  const bunnyVideoRef = useRef(null);
 
   const activeChat = chats.find((chat) => chat.id === activeChatId) || chats[0];
   const messages = activeChat?.messages || [];
   const questionCount = activeChat?.questionCount || 0;
   const isCompleted = activeChat?.completed || questionCount >= MAX_QUESTIONS;
 
-  useEffect(() => localStorage.setItem(STORAGE_KEY, JSON.stringify(chats)), [chats]);
+  useEffect(
+    () => localStorage.setItem(STORAGE_KEY, JSON.stringify(chats)),
+    [chats],
+  );
 
   useEffect(() => localStorage.setItem("talky-theme", theme), [theme]);
 
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setVoiceSupported(false);
       return undefined;
@@ -62,7 +80,10 @@ function App() {
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
     recognition.onresult = (event) => {
-      const transcript = Array.from(event.results).map((result) => result[0].transcript).join(" ").trim();
+      const transcript = Array.from(event.results)
+        .map((result) => result[0].transcript)
+        .join(" ")
+        .trim();
       if (transcript) setText(transcript);
     };
     recognition.onerror = () => setIsListening(false);
@@ -71,11 +92,26 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    if (chatRef.current)
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [messages, loading]);
 
+  useEffect(() => {
+    const bunnyVideo = bunnyVideoRef.current;
+    if (!bunnyVideo) return;
+
+    if (speaking && !speechPaused) {
+      bunnyVideo.play().catch(() => {});
+    } else {
+      bunnyVideo.pause();
+      bunnyVideo.currentTime = 0;
+    }
+  }, [speaking, speechPaused]);
+
   const updateChat = (chatId, updater) => {
-    setChats((current) => current.map((chat) => (chat.id === chatId ? updater(chat) : chat)));
+    setChats((current) =>
+      current.map((chat) => (chat.id === chatId ? updater(chat) : chat)),
+    );
   };
 
   const stopSpeaking = () => {
@@ -103,11 +139,15 @@ function App() {
 
   const deleteChat = (chatId) => {
     const chatToDelete = chats.find((chat) => chat.id === chatId);
-    if (!chatToDelete || !window.confirm(`Delete "${chatToDelete.title}"?`)) return;
+    if (!chatToDelete || !window.confirm(`Delete "${chatToDelete.title}"?`))
+      return;
 
     const remainingChats = chats.filter((chat) => chat.id !== chatId);
     if (chatId === activeChatId) {
-      const nextChat = remainingChats.find((chat) => chat.messages.length) || remainingChats[0] || createChat();
+      const nextChat =
+        remainingChats.find((chat) => chat.messages.length) ||
+        remainingChats[0] ||
+        createChat();
       setActiveChatId(nextChat.id);
       setText("");
       stopSpeaking();
@@ -124,8 +164,8 @@ function App() {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(value);
       utterance.lang = "en-US";
-      utterance.rate = 1;
-      utterance.pitch = 1;
+      utterance.rate = 0.92;
+      utterance.pitch = 1.15;
       utterance.volume = 1;
       utterance.onstart = () => {
         setSpeaking(true);
@@ -165,14 +205,20 @@ function App() {
 
     const chatId = activeChat.id;
     const questionNumber = questionCount + 1;
-    const userMessage = { id: `${Date.now()}-user`, sender: "user", text: trimmed };
+    const userMessage = {
+      id: `${Date.now()}-user`,
+      sender: "user",
+      text: trimmed,
+    };
     const conversationHistory = messages.map((message) => ({
       role: message.sender === "user" ? "user" : "assistant",
       content: message.text,
     }));
     updateChat(chatId, (chat) => ({
       ...chat,
-      title: chat.messages.length ? chat.title : `${trimmed.slice(0, 42)}${trimmed.length > 42 ? "..." : ""}`,
+      title: chat.messages.length
+        ? chat.title
+        : `${trimmed.slice(0, 42)}${trimmed.length > 42 ? "..." : ""}`,
       messages: [...chat.messages, userMessage],
       questionCount: questionNumber,
       updatedAt: Date.now(),
@@ -198,7 +244,10 @@ function App() {
     const assistantMessageId = `${Date.now()}-assistant`;
     updateChat(chatId, (chat) => ({
       ...chat,
-      messages: [...chat.messages, { id: assistantMessageId, sender: "assistant", text: aiText }],
+      messages: [
+        ...chat.messages,
+        { id: assistantMessageId, sender: "assistant", text: aiText },
+      ],
       completed: questionNumber >= MAX_QUESTIONS,
       updatedAt: Date.now(),
     }));
@@ -213,27 +262,306 @@ function App() {
   };
 
   const hasStarted = Boolean(text.trim() || isListening || messages.length);
-  const visibleChats = [...chats].sort((first, second) => second.updatedAt - first.updatedAt);
+  const visibleChats = [...chats].sort(
+    (first, second) => second.updatedAt - first.updatedAt,
+  );
 
   return (
     <div className={`app-shell ${theme}-theme`}>
       <aside className={`history-sidebar ${sidebarOpen ? "drawer-open" : ""}`}>
-        <div className="sidebar-header"><div className="sidebar-brand"><span className="brand-mark">✦</span><strong>Talky</strong></div><button type="button" className="close-drawer" onClick={() => setSidebarOpen(false)} aria-label="Close history">×</button></div>
-        <button type="button" className="new-chat-button" onClick={startNewChat}><span>＋</span> New Chat</button>
+        <div className="sidebar-header">
+          <div className="sidebar-brand">
+            <span className="brand-mark">✦</span>
+            <strong>Bunny</strong>
+          </div>
+          <button
+            type="button"
+            className="close-drawer"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close history"
+          >
+            ×
+          </button>
+        </div>
+        <button
+          type="button"
+          className="new-chat-button"
+          onClick={startNewChat}
+        >
+          <span>＋</span> New Chat
+        </button>
         <div className="history-label">Your conversations</div>
         <nav className="history-list" aria-label="Chat history">
-          {visibleChats.filter((chat) => chat.messages.length).map((chat) => <div key={chat.id} className={`history-item ${chat.id === activeChatId ? "selected" : ""}`} role="button" tabIndex={0} aria-current={chat.id === activeChatId ? "page" : undefined} onClick={() => selectChat(chat.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") selectChat(chat.id); }}><span className="history-icon">◌</span><span className="history-item-copy"><strong>{chat.title}</strong><small>{chat.questionCount}/{MAX_QUESTIONS} questions</small></span>{chat.completed && <span className="completed-dot" aria-label="Completed">✓</span>}<button type="button" className="history-delete" aria-label={`Delete ${chat.title}`} title="Delete chat" onClick={(event) => { event.stopPropagation(); deleteChat(chat.id); }} onKeyDown={(event) => event.stopPropagation()}>🗑</button></div>)}
-          {!chats.some((chat) => chat.messages.length) && <p className="empty-history">Your conversations will appear here.</p>}
+          {visibleChats
+            .filter((chat) => chat.messages.length)
+            .map((chat) => (
+              <div
+                key={chat.id}
+                className={`history-item ${chat.id === activeChatId ? "selected" : ""}`}
+                role="button"
+                tabIndex={0}
+                aria-current={chat.id === activeChatId ? "page" : undefined}
+                onClick={() => selectChat(chat.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ")
+                    selectChat(chat.id);
+                }}
+              >
+                <span className="history-icon">◌</span>
+                <span className="history-item-copy">
+                  <strong>{chat.title}</strong>
+                  <small>
+                    {chat.questionCount}/{MAX_QUESTIONS} questions
+                  </small>
+                </span>
+                {chat.completed && (
+                  <span className="completed-dot" aria-label="Completed">
+                    ✓
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className="history-delete"
+                  aria-label={`Delete ${chat.title}`}
+                  title="Delete chat"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    deleteChat(chat.id);
+                  }}
+                  onKeyDown={(event) => event.stopPropagation()}
+                >
+                  🗑
+                </button>
+              </div>
+            ))}
+          {!chats.some((chat) => chat.messages.length) && (
+            <p className="empty-history">
+              Your conversations will appear here.
+            </p>
+          )}
         </nav>
       </aside>
-      {sidebarOpen && <button type="button" className="drawer-backdrop" onClick={() => setSidebarOpen(false)} aria-label="Close history" />}
+      {sidebarOpen && (
+        <button
+          type="button"
+          className="drawer-backdrop"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close history"
+        />
+      )}
 
       <div className="main-column">
-        <header className="topbar"><button type="button" className="menu-button" onClick={() => setSidebarOpen(true)} aria-label="Open history">☰</button><div className="brand-copy"><h1>AI Chatbot</h1><span>Talk, ask, learn and have fun!</span></div><button type="button" className="theme-toggle" onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>{theme === "dark" ? "☀" : "☾"}</button><div className="progress-pill"><span>{questionCount}/{MAX_QUESTIONS}</span><small>questions</small></div></header>
-        <main className={`chat-panel ${hasStarted ? "chat-started" : "chat-idle"}`}>
-          {hasStarted ? <div className="chat-area" ref={chatRef}><div className="timeline">TODAY</div>{messages.map((message) => <div key={message.id} className={`message-row ${message.sender === "user" ? "user-row" : "assistant-row"}`}>{message.sender === "assistant" && <div className="assistant-bubble-wrap"><div className="assistant-avatar">🤖</div><div className="assistant-name">Talky</div></div>}<div className={message.sender === "user" ? "user-bubble" : `assistant-bubble ${speakingMessageId === message.id ? "assistant-speaking" : ""}`}>{message.sender === "user" ? message.text : <ReactMarkdown>{message.text}</ReactMarkdown>}{message.sender === "assistant" && <div className="play-row"><button type="button" className="play-button" onClick={() => speakText(message.text, message.id)}>▶ Play</button>{speakingMessageId === message.id && <><button type="button" className="pause-button" onClick={toggleSpeechPause}>{speechPaused ? "▶ Resume" : "Ⅱ Pause"}</button><button type="button" className="stop-button" onClick={stopSpeaking}>Stop</button></>}</div>}</div></div>)}{loading && <div className="message-row assistant-row"><div className="assistant-bubble-wrap"><div className="assistant-avatar">🤖</div><div className="assistant-name">Talky</div></div><div className="assistant-bubble typing-bubble"><span className="dot" /><span className="dot" /><span className="dot" /></div></div>}{isCompleted && !loading && <div className="limit-panel"><strong>You’ve reached the 20-question limit.</strong><span>Start a new chat to continue.</span><button type="button" onClick={startNewChat}>Start New Chat</button></div>}</div> : <div className="welcome-panel"><div className="welcome-avatar">🤖</div><div className="welcome-kicker">YOUR CURIOUS LEARNING BUDDY</div><h2>Hi! I’m Talky 👋</h2><h3>What would you like to talk about?</h3><p>You can type your question or just tap the microphone and talk to me.</p></div>}
-          {!hasStarted && <div className="prompt-grid">{suggestedPrompts.map((prompt) => <button key={prompt} type="button" className="prompt-chip" onClick={() => sendQuestion(prompt)}><span className="chip-icon">✦</span>{prompt}</button>)}</div>}
-          <div className="composer-wrap"><div className="composer-box"><input type="text" value={text} disabled={isCompleted} onChange={(event) => setText(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") sendQuestion(); }} placeholder={isCompleted ? "Start a new chat to continue" : "Ask Talky anything..."} /><div className="composer-actions"><button type="button" className={`mic-button ${isListening ? "active" : ""}`} onClick={toggleListening} disabled={isCompleted} aria-label="Use microphone">🎙️</button><button type="button" className="send-button" onClick={() => sendQuestion()} disabled={loading || isCompleted}>{loading ? "..." : "➤"}</button></div></div><div className="hint-row"><span>Press Enter to send</span>{!voiceSupported && <span>Speech recognition is unavailable in this browser.</span>}</div></div>
+        <header className="topbar">
+          <button
+            type="button"
+            className="menu-button"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open history"
+          >
+            ☰
+          </button>
+          <div className="brand-copy">
+            <h1>AI Chatbot</h1>
+            <span>Talk, ask, learn and have fun!</span>
+          </div>
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={() =>
+              setTheme((current) => (current === "dark" ? "light" : "dark"))
+            }
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+          >
+            {theme === "dark" ? "☀" : "☾"}
+          </button>
+          <div className="progress-pill">
+            <span>
+              {questionCount}/{MAX_QUESTIONS}
+            </span>
+            <small>questions</small>
+          </div>
+        </header>
+        <main
+          className={`chat-panel ${hasStarted ? "chat-started" : "chat-idle"}`}
+        >
+          {hasStarted ? (
+            <div className="chat-area" ref={chatRef}>
+              <div className="timeline">TODAY</div>
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`message-row ${message.sender === "user" ? "user-row" : "assistant-row"}`}
+                >
+                  {message.sender === "assistant" && (
+                    <div className="assistant-bubble-wrap">
+                      <div className="assistant-avatar">🐰</div>
+                      <div className="assistant-name">Bunny</div>
+                    </div>
+                  )}
+                  <div
+                    className={
+                      message.sender === "user"
+                        ? "user-bubble"
+                        : `assistant-bubble ${speakingMessageId === message.id ? "assistant-speaking" : ""}`
+                    }
+                  >
+                    {message.sender === "user" ? (
+                      message.text
+                    ) : (
+                      <ReactMarkdown>{message.text}</ReactMarkdown>
+                    )}
+                    {message.sender === "assistant" && (
+                      <div className="play-row">
+                        <button
+                          type="button"
+                          className="play-button"
+                          onClick={() => speakText(message.text, message.id)}
+                        >
+                          ▶ Play
+                        </button>
+                        {speakingMessageId === message.id && (
+                          <>
+                            <button
+                              type="button"
+                              className="pause-button"
+                              onClick={toggleSpeechPause}
+                            >
+                              {speechPaused ? "▶ Resume" : "Ⅱ Pause"}
+                            </button>
+                            <button
+                              type="button"
+                              className="stop-button"
+                              onClick={stopSpeaking}
+                            >
+                              Stop
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div className="message-row assistant-row">
+                  <div className="assistant-bubble-wrap">
+                    <div className="assistant-avatar">🐰</div>
+                    <div className="assistant-name">Bunny</div>
+                  </div>
+                  <div className="assistant-bubble typing-bubble">
+                    <span className="dot" />
+                    <span className="dot" />
+                    <span className="dot" />
+                  </div>
+                </div>
+              )}
+              {isCompleted && !loading && (
+                <div className="limit-panel">
+                  <strong>You’ve reached the 20-question limit.</strong>
+                  <span>Start a new chat to continue.</span>
+                  <button type="button" onClick={startNewChat}>
+                    Start New Chat
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="welcome-panel">
+              <div className="welcome-avatar">🐰</div>
+              <div className="welcome-kicker">YOUR CURIOUS LEARNING BUDDY</div>
+              <h2>Hi! I’m Bunny 👋</h2>
+              <h3>What would you like to talk about?</h3>
+              <p>
+                You can type your question or just tap the microphone and talk
+                to me.
+              </p>
+            </div>
+          )}
+          {hasStarted && (
+            <div
+              className={`bunny-stage ${speaking && !speechPaused ? "bunny-stage-speaking" : ""}`}
+            >
+              <video
+                ref={bunnyVideoRef}
+                className="bunny-video"
+                src="/b.mp4"
+                muted
+                playsInline
+                loop
+                preload="metadata"
+                aria-label="Bunny speaking"
+              />
+              <div className="bunny-status">
+                <span className="sound-bars" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                {speaking && !speechPaused
+                  ? "Bunny is speaking..."
+                  : "Bunny is ready to listen"}
+              </div>
+            </div>
+          )}
+          {!hasStarted && (
+            <div className="prompt-grid">
+              {suggestedPrompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  className="prompt-chip"
+                  onClick={() => sendQuestion(prompt)}
+                >
+                  <span className="chip-icon">✦</span>
+                  {prompt}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="composer-wrap">
+            <div className="composer-box">
+              <input
+                type="text"
+                value={text}
+                disabled={isCompleted}
+                onChange={(event) => setText(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") sendQuestion();
+                }}
+                placeholder={
+                  isCompleted
+                    ? "Start a new chat to continue"
+                    : "Ask Bunny anything..."
+                }
+              />
+              <div className="composer-actions">
+                <button
+                  type="button"
+                  className={`mic-button ${isListening ? "active" : ""}`}
+                  onClick={toggleListening}
+                  disabled={isCompleted}
+                  aria-label="Use microphone"
+                >
+                  🎙️
+                </button>
+                <button
+                  type="button"
+                  className="send-button"
+                  onClick={() => sendQuestion()}
+                  disabled={loading || isCompleted}
+                >
+                  {loading ? "..." : "➤"}
+                </button>
+              </div>
+            </div>
+            <div className="hint-row">
+              <span>Press Enter to send</span>
+              {!voiceSupported && (
+                <span>Speech recognition is unavailable in this browser.</span>
+              )}
+            </div>
+          </div>
         </main>
       </div>
     </div>
