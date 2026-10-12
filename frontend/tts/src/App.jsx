@@ -163,7 +163,7 @@ function App() {
     return new Promise((resolve) => {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(value);
-      utterance.lang = "en-US";
+      utterance.lang = "en-IN";
       utterance.rate = 0.92;
       utterance.pitch = 1.15;
       utterance.volume = 1;
@@ -361,7 +361,7 @@ function App() {
             ☰
           </button>
           <div className="brand-copy">
-            <h1>AI Chatbot</h1>
+            <h1>It's Bunny!</h1>
             <span>Talk, ask, learn and have fun!</span>
           </div>
           <button
