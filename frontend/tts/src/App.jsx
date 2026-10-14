@@ -16,14 +16,30 @@ const suggestedPrompts = [
   "Help me learn something new",
 ];
 
-const createChat = () => ({
-  id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+const formatChatDate = (timestamp) => {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "Unknown date";
+
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+};
+
+const createChat = () => {
+  const timestamp = Date.now();
+  return {
+    id: `${timestamp}-${Math.random().toString(36).slice(2)}`,
   title: "New conversation",
   messages: [],
   questionCount: 0,
   completed: false,
-  updatedAt: Date.now(),
-});
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+};
 
 const readStoredChats = () => {
   try {
@@ -51,6 +67,9 @@ function App() {
     () => localStorage.getItem("talky-theme") || "light",
   );
   const recognitionRef = useRef(null);
+  const recognitionSubmitTimeoutRef = useRef(null);
+  const sendQuestionRef = useRef(() => {});
+  const chimeAudioRef = useRef(null);
   const chatRef = useRef(null);
   const bunnyVideoRef = useRef(null);
 
@@ -84,11 +103,31 @@ function App() {
         .map((result) => result[0].transcript)
         .join(" ")
         .trim();
-      if (transcript) setText(transcript);
+      if (transcript) {
+        setText(transcript);
+        window.clearTimeout(recognitionSubmitTimeoutRef.current);
+        recognitionSubmitTimeoutRef.current = window.setTimeout(
+          () => sendQuestionRef.current(transcript),
+          500,
+        );
+      }
     };
     recognition.onerror = () => setIsListening(false);
     recognitionRef.current = recognition;
-    return () => recognition.stop();
+    return () => {
+      window.clearTimeout(recognitionSubmitTimeoutRef.current);
+      recognition.stop();
+    };
+  }, []);
+
+  useEffect(() => {
+    const chime = new Audio("/chime.mp3");
+    chime.preload = "auto";
+    chimeAudioRef.current = chime;
+    return () => {
+      chime.pause();
+      chimeAudioRef.current = null;
+    };
   }, []);
 
   useEffect(() => {
@@ -164,8 +203,8 @@ function App() {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(value);
       utterance.lang = "en-IN";
-      utterance.rate = 0.92;
-      utterance.pitch = 1.15;
+      utterance.rate = 1;
+      utterance.pitch = 1.2;
       utterance.volume = 1;
       utterance.onstart = () => {
         setSpeaking(true);
@@ -202,6 +241,12 @@ function App() {
   const sendQuestion = async (promptText = text) => {
     const trimmed = (promptText || text).trim();
     if (!trimmed || loading || isCompleted) return;
+
+    const chime = chimeAudioRef.current;
+    if (chime) {
+      chime.currentTime = 0;
+      chime.play().catch(() => {});
+    }
 
     const chatId = activeChat.id;
     const questionNumber = questionCount + 1;
@@ -255,6 +300,8 @@ function App() {
     await speakText(aiText, assistantMessageId);
   };
 
+  sendQuestionRef.current = sendQuestion;
+
   const toggleListening = () => {
     if (!recognitionRef.current || isCompleted) return;
     if (isListening) recognitionRef.current.stop();
@@ -271,7 +318,9 @@ function App() {
       <aside className={`history-sidebar ${sidebarOpen ? "drawer-open" : ""}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
-            <span className="brand-mark">✦</span>
+            <span className="brand-mark">
+              <img src="/bunny-mark.svg" alt="Bunny" />
+            </span>
             <strong>Bunny</strong>
           </div>
           <button
@@ -312,6 +361,9 @@ function App() {
                   <strong>{chat.title}</strong>
                   <small>
                     {chat.questionCount}/{MAX_QUESTIONS} questions
+                  </small>
+                  <small className="history-date">
+                    {formatChatDate(chat.updatedAt || chat.createdAt)}
                   </small>
                 </span>
                 {chat.completed && (
@@ -387,7 +439,9 @@ function App() {
         >
           {hasStarted ? (
             <div className="chat-area" ref={chatRef}>
-              <div className="timeline">TODAY</div>
+              <div className="timeline">
+                {formatChatDate(activeChat?.updatedAt || activeChat?.createdAt)}
+              </div>
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -485,7 +539,7 @@ function App() {
               <video
                 ref={bunnyVideoRef}
                 className="bunny-video"
-                src="/b.mp4"
+                src="/finalbunnyy.mp4"
                 muted
                 playsInline
                 loop
