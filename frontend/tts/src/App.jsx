@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import Login from "./Login";
+import { API_BASE_URL } from "./config";
 import "./App.css";
 
 const MAX_QUESTIONS = 20;
 const STORAGE_KEY = "talky-chat-history";
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV
-    ? "http://127.0.0.1:8000"
-    : "https://ai-chatbot-backend-3ifb.onrender.com");
 const suggestedPrompts = [
   "Tell me a fun fact",
   "Why is the sky blue?",
@@ -427,6 +424,9 @@ function App() {
           >
             {theme === "dark" ? "☀" : "☾"}
           </button>
+          <div className="login-control">
+            <Login />
+          </div>
           <div className="progress-pill">
             <span>
               {questionCount}/{MAX_QUESTIONS}

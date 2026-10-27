@@ -1,22 +1,151 @@
-from fastapi import FastAPI
+from datetime import datetime, timedelta, timezone
+import os
+import sqlite3
+
+import jwt
+import requests
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from groq import Groq
-import os
+from google.oauth2 import id_token
+from pydantic import BaseModel
 
 load_dotenv()
 
 
 app = FastAPI()
 
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "10080"))
+DATABASE_PATH = os.getenv("AUTH_DATABASE_PATH", "auth.db")
+
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=[
+        "http://localhost:5173",
+        "https://kidchatbot-frontend.onrender.com",
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+class GoogleAuthRequest(BaseModel):
+    token: str
+
+
+def initialize_auth_database():
+    with sqlite3.connect(DATABASE_PATH) as connection:
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL UNIQUE,
+                google_sub TEXT UNIQUE,
+                name TEXT NOT NULL,
+                picture TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+
+
+initialize_auth_database()
+
+
+def issue_session_token(user_id: int, email: str):
+    if not JWT_SECRET_KEY:
+        raise HTTPException(
+            status_code=503,
+            detail="JWT_SECRET_KEY is not configured on the backend.",
+        )
+
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": str(user_id),
+        "email": email,
+        "iat": now,
+        "exp": now + timedelta(minutes=JWT_EXPIRE_MINUTES),
+    }
+    return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+
+@app.post("/api/auth/google")
+def google_auth(data: GoogleAuthRequest):
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(
+            status_code=503,
+            detail="GOOGLE_CLIENT_ID is not configured on the backend.",
+        )
+
+    try:
+        google_user = id_token.verify_oauth2_token(
+            data.token,
+            requests.Request(),
+            GOOGLE_CLIENT_ID,
+        )
+    except (ValueError, requests.RequestException) as error:
+        print("Google token verification failed:", error)
+        raise HTTPException(status_code=401, detail="Invalid Google ID token")
+
+    email = google_user.get("email")
+    google_sub = google_user.get("sub")
+    if not email or not google_sub or not google_user.get("email_verified", False):
+        raise HTTPException(
+            status_code=400,
+            detail="Google account does not contain a verified email.",
+        )
+
+    name = google_user.get("name") or email.split("@", 1)[0]
+    picture = google_user.get("picture")
+    now = datetime.now(timezone.utc).isoformat()
+
+    with sqlite3.connect(DATABASE_PATH) as connection:
+        connection.row_factory = sqlite3.Row
+        user = connection.execute(
+            "SELECT * FROM users WHERE google_sub = ? OR email = ?",
+            (google_sub, email),
+        ).fetchone()
+
+        if user:
+            connection.execute(
+                """
+                UPDATE users
+                SET google_sub = ?, name = ?, picture = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (google_sub, name, picture, now, user["id"]),
+            )
+            user_id = user["id"]
+        else:
+            cursor = connection.execute(
+                """
+                INSERT INTO users
+                    (email, google_sub, name, picture, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (email, google_sub, name, picture, now, now),
+            )
+            user_id = cursor.lastrowid
+
+    return {
+        "access_token": issue_session_token(user_id, email),
+        "token_type": "bearer",
+        "user": {
+            "id": user_id,
+            "email": email,
+            "name": name,
+            "picture": picture,
+            "google_sub": google_sub,
+        },
+    }
+
 
 api_key = os.getenv("GROQ_API")
 
