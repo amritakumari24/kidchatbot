@@ -100,9 +100,10 @@ VITE_GOOGLE_CLIENT_ID=your_google_web_client_id.apps.googleusercontent.com
 
 The frontend variable is required at build time; without
 `VITE_GOOGLE_CLIENT_ID`, the Google button is intentionally not rendered.
-When deploying to Render, set `VITE_API_URL` and `VITE_GOOGLE_CLIENT_ID` on the
-frontend service, and `GOOGLE_CLIENT_ID`, `JWT_SECRET_KEY`, and `CORS_ORIGINS`
-on the backend service. Use the same client ID in both services.
+When deploying to Render, set `VITE_API_URL=https://kidchatbot-backend.onrender.com`
+and `VITE_GOOGLE_CLIENT_ID` on the frontend service, and `GOOGLE_CLIENT_ID`,
+`JWT_SECRET_KEY`, and `CORS_ORIGINS` on the backend service. Use the same client
+ID in both services.
 
 ## API
 
