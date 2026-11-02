@@ -14,6 +14,21 @@ const suggestedPrompts = [
   "Help me learn something new",
 ];
 
+const prepareSpeechText = (value) =>
+  value
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/^\s*#{1,6}\s*/gm, "")
+    .replace(/^\s*[-+*]\s+/gm, "")
+    .replace(/^\s*\d+\.\s+/gm, "")
+    .replace(/[*_~`>|]/g, " ")
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, " ")
+    .replace(/[\uFE0F\u200D]/g, " ")
+    .replace(/[•◦▪▫→←⇒✓✔✦★☆]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const formatChatDate = (timestamp) => {
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime())) return "Unknown date";
@@ -196,10 +211,11 @@ function Chatbot() {
   };
 
   const speakText = (value, messageId = null) => {
-    if (!value) return Promise.resolve();
+    const speechText = prepareSpeechText(value);
+    if (!speechText) return Promise.resolve();
     return new Promise((resolve) => {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(value);
+      const utterance = new SpeechSynthesisUtterance(speechText);
       utterance.lang = "en-IN";
       utterance.rate = 1;
       utterance.pitch = 1.2;
