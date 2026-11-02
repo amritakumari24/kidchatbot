@@ -93,7 +93,7 @@
 .auth-terms { margin: 18px 0 0; color: var(--text-subtle, #9aa8b5); font-size: 0.66rem; line-height: 1.5; text-align: center; }
 @keyframes authSpin { to { transform: rotate(360deg); } }
 .account-control { display: flex; align-items: center; gap: 8px; }
-.account-name { max-width: 120px; overflow: hidden; color: var(--text-subtle, #718499); font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
+.account-name { max-width: 120px; overflow: hidden; color: #fff; font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
 .account-logout { border: 1px solid #d5e7f5; border-radius: 7px; padding: 6px 9px; background: #eef7fd; color: #2788c6; cursor: pointer; font-size: 0.75rem; }
 .auth-config-warning { color: #9a5c00; font-size: 0.72rem; }
 .auth-error { max-width: 180px; color: #b42318; font-size: 0.68rem; }
