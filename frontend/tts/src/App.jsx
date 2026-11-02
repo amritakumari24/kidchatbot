@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import Login from "./Login";
+import { useAuth } from "./AuthContext";
 import { API_BASE_URL } from "./config";
 import "./App.css";
 
@@ -47,7 +48,7 @@ const readStoredChats = () => {
   }
 };
 
-function App() {
+function Chatbot() {
   const [chats, setChats] = useState(readStoredChats);
   const [activeChatId, setActiveChatId] = useState(
     () => readStoredChats()[0].id,
@@ -620,6 +621,11 @@ function App() {
       </div>
     </div>
   );
+}
+
+function App() {
+  const { user } = useAuth();
+  return user ? <Chatbot /> : <Login fullPage />;
 }
 
 export default App;

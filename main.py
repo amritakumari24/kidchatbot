@@ -3,11 +3,11 @@ import os
 import sqlite3
 
 import jwt
-import requests
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from groq import Groq
+from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from pydantic import BaseModel
 
@@ -21,14 +21,20 @@ JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "10080"))
 DATABASE_PATH = os.getenv("AUTH_DATABASE_PATH", "auth.db")
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173,"
+        "https://kidchatbot-frontend.onrender.com",
+    ).split(",")
+    if origin.strip()
+]
 
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://kidchatbot-frontend.onrender.com",
-    ],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -87,10 +93,10 @@ def google_auth(data: GoogleAuthRequest):
     try:
         google_user = id_token.verify_oauth2_token(
             data.token,
-            requests.Request(),
+            google_requests.Request(),
             GOOGLE_CLIENT_ID,
         )
-    except (ValueError, requests.RequestException) as error:
+    except ValueError as error:
         print("Google token verification failed:", error)
         raise HTTPException(status_code=401, detail="Invalid Google ID token")
 

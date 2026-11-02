@@ -50,6 +50,21 @@ Create a `.env` file in the project root:
 
 ```env
 GROQ_API=your_groq_api_key
+GOOGLE_CLIENT_ID=your_google_web_client_id.apps.googleusercontent.com
+JWT_SECRET_KEY=replace_with_a_long_random_backend_secret
+```
+
+`GOOGLE_CLIENT_ID` must be the same Google Web application client ID used by the
+frontend. `JWT_SECRET_KEY` is required after Google verifies the user, because
+the backend signs the application session token.
+
+For Google Identity Services, add both local origins below and your deployed
+frontend origin to **Authorized JavaScript origins** in Google Cloud Console:
+
+```text
+http://localhost:5173
+http://127.0.0.1:5173
+https://kidchatbot-frontend.onrender.com
 ```
 
 ### 2. Install and start the backend
@@ -80,7 +95,14 @@ By default, the development frontend calls `http://127.0.0.1:8000`. To use anoth
 
 ```env
 VITE_API_URL=http://127.0.0.1:8000
+VITE_GOOGLE_CLIENT_ID=your_google_web_client_id.apps.googleusercontent.com
 ```
+
+The frontend variable is required at build time; without
+`VITE_GOOGLE_CLIENT_ID`, the Google button is intentionally not rendered.
+When deploying to Render, set `VITE_API_URL` and `VITE_GOOGLE_CLIENT_ID` on the
+frontend service, and `GOOGLE_CLIENT_ID`, `JWT_SECRET_KEY`, and `CORS_ORIGINS`
+on the backend service. Use the same client ID in both services.
 
 ## API
 

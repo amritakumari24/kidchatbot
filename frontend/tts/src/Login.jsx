@@ -17,9 +17,9 @@ function validateForm(mode, form) {
   return errors;
 }
 
-function Login() {
+function Login({ fullPage = false }) {
   const { user, loginWithGoogle, logout } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(fullPage);
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
@@ -82,6 +82,148 @@ function Login() {
     );
   }
 
+  const authContent = (
+    <>
+      {!fullPage && (
+        <button type="button" className="auth-modal-close" onClick={() => setIsOpen(false)} aria-label="Close sign in dialog">
+          ×
+        </button>
+      )}
+      <div className="auth-modal-brand">
+        <span className="auth-modal-bunny">🐰</span>
+        <span>Bunny</span>
+      </div>
+      <h2 id="auth-modal-title">
+        {mode === "login" ? "Welcome back!" : "Join Bunny"}
+      </h2>
+      <p className="auth-modal-subtitle">
+        {mode === "login"
+          ? "Sign in to keep your learning journey going."
+          : "Create an account and make learning more fun."}
+      </p>
+
+      <div className="auth-tabs" role="tablist" aria-label="Account action">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "login"}
+          className={mode === "login" ? "active" : ""}
+          onClick={() => openModal("login")}
+        >
+          Log in
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "signup"}
+          className={mode === "signup" ? "active" : ""}
+          onClick={() => openModal("signup")}
+        >
+          Sign up
+        </button>
+      </div>
+
+      <form className="auth-form" onSubmit={handleSubmit} noValidate>
+        {mode === "signup" && (
+          <label className="auth-field">
+            <span>Name</span>
+            <input
+              value={form.name}
+              onChange={(event) => updateField("name", event.target.value)}
+              autoComplete="name"
+              placeholder="Your name"
+              aria-invalid={Boolean(errors.name)}
+            />
+            {errors.name && <small>{errors.name}</small>}
+          </label>
+        )}
+        <label className="auth-field">
+          <span>Email</span>
+          <input
+            type="email"
+            value={form.email}
+            onChange={(event) => updateField("email", event.target.value)}
+            autoComplete="email"
+            placeholder="you@example.com"
+            aria-invalid={Boolean(errors.email)}
+          />
+          {errors.email && <small>{errors.email}</small>}
+        </label>
+        <label className="auth-field">
+          <span>Password</span>
+          <span className="auth-password-wrap">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={form.password}
+              onChange={(event) => updateField("password", event.target.value)}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              placeholder="At least 8 characters"
+              aria-invalid={Boolean(errors.password)}
+            />
+            <button
+              type="button"
+              className="auth-password-toggle"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </span>
+          {errors.password && <small>{errors.password}</small>}
+        </label>
+        {mode === "login" && (
+          <button type="button" className="auth-forgot">
+            Forgot password?
+          </button>
+        )}
+        {submitError && <p className="auth-form-error">{submitError}</p>}
+        <button type="submit" className="auth-submit" disabled={isSubmitting}>
+          {isSubmitting && <span className="auth-spinner" aria-hidden="true" />}
+          {isSubmitting ? "Please wait..." : mode === "login" ? "Log in" : "Create account"}
+        </button>
+      </form>
+
+      <div className="auth-divider"><span>or continue with</span></div>
+      {GOOGLE_CLIENT_ID ? (
+        <div className="auth-google">
+          <GoogleLogin
+            text="continue_with"
+            shape="pill"
+            size="large"
+            width="340"
+            onSuccess={({ credential }) => {
+              if (!credential) {
+                setGoogleError("Google did not return a sign-in credential.");
+                return;
+              }
+              setGoogleError("");
+              loginWithGoogle(credential)
+                .then(() => setIsOpen(false))
+                .catch((error) => setGoogleError(error.message));
+            }}
+            onError={() => setGoogleError("Google sign-in failed. Please try again.")}
+          />
+          {googleError && <p className="auth-form-error">{googleError}</p>}
+        </div>
+      ) : (
+        <p className="auth-form-error">Google sign-in is not configured.</p>
+      )}
+      <p className="auth-terms">
+        By continuing, you agree to learn, explore, and have fun with Bunny.
+      </p>
+    </>
+  );
+
+  if (fullPage) {
+    return (
+      <div className="auth-page-shell">
+        <section className="auth-modal auth-page-card" role="main" aria-labelledby="auth-modal-title">
+          {authContent}
+        </section>
+      </div>
+    );
+  }
+
   return (
     <>
       <button type="button" className="auth-open-button" onClick={() => openModal()}>
@@ -95,149 +237,8 @@ function Login() {
             if (event.target === event.currentTarget) setIsOpen(false);
           }}
         >
-          <section
-            className="auth-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="auth-modal-title"
-          >
-            <button
-              type="button"
-              className="auth-modal-close"
-              onClick={() => setIsOpen(false)}
-              aria-label="Close sign in dialog"
-            >
-              ×
-            </button>
-            <div className="auth-modal-brand">
-              <span className="auth-modal-bunny">🐰</span>
-              <span>Bunny</span>
-            </div>
-            <h2 id="auth-modal-title">
-              {mode === "login" ? "Welcome back!" : "Join Bunny"}
-            </h2>
-            <p className="auth-modal-subtitle">
-              {mode === "login"
-                ? "Sign in to keep your learning journey going."
-                : "Create an account and make learning more fun."}
-            </p>
-
-            <div className="auth-tabs" role="tablist" aria-label="Account action">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={mode === "login"}
-                className={mode === "login" ? "active" : ""}
-                onClick={() => openModal("login")}
-              >
-                Log in
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={mode === "signup"}
-                className={mode === "signup" ? "active" : ""}
-                onClick={() => openModal("signup")}
-              >
-                Sign up
-              </button>
-            </div>
-
-            <form className="auth-form" onSubmit={handleSubmit} noValidate>
-              {mode === "signup" && (
-                <label className="auth-field">
-                  <span>Name</span>
-                  <input
-                    value={form.name}
-                    onChange={(event) => updateField("name", event.target.value)}
-                    autoComplete="name"
-                    placeholder="Your name"
-                    aria-invalid={Boolean(errors.name)}
-                  />
-                  {errors.name && <small>{errors.name}</small>}
-                </label>
-              )}
-              <label className="auth-field">
-                <span>Email</span>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(event) => updateField("email", event.target.value)}
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  aria-invalid={Boolean(errors.email)}
-                />
-                {errors.email && <small>{errors.email}</small>}
-              </label>
-              <label className="auth-field">
-                <span>Password</span>
-                <span className="auth-password-wrap">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={form.password}
-                    onChange={(event) =>
-                      updateField("password", event.target.value)
-                    }
-                    autoComplete={
-                      mode === "login" ? "current-password" : "new-password"
-                    }
-                    placeholder="At least 8 characters"
-                    aria-invalid={Boolean(errors.password)}
-                  />
-                  <button
-                    type="button"
-                    className="auth-password-toggle"
-                    onClick={() => setShowPassword((current) => !current)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </button>
-                </span>
-                {errors.password && <small>{errors.password}</small>}
-              </label>
-              {mode === "login" && (
-                <button type="button" className="auth-forgot">
-                  Forgot password?
-                </button>
-              )}
-              {submitError && <p className="auth-form-error">{submitError}</p>}
-              <button type="submit" className="auth-submit" disabled={isSubmitting}>
-                {isSubmitting && <span className="auth-spinner" aria-hidden="true" />}
-                {isSubmitting
-                  ? "Please wait..."
-                  : mode === "login"
-                    ? "Log in"
-                    : "Create account"}
-              </button>
-            </form>
-
-            <div className="auth-divider"><span>or continue with</span></div>
-            {GOOGLE_CLIENT_ID ? (
-              <div className="auth-google">
-                <GoogleLogin
-                  text="continue_with"
-                  shape="pill"
-                  size="large"
-                  width="340"
-                  onSuccess={({ credential }) => {
-                    if (!credential) return;
-                    setGoogleError("");
-                    loginWithGoogle(credential)
-                      .then(() => setIsOpen(false))
-                      .catch((error) => setGoogleError(error.message));
-                  }}
-                  onError={() =>
-                    setGoogleError("Google sign-in failed. Please try again.")
-                  }
-                />
-                {googleError && <p className="auth-form-error">{googleError}</p>}
-              </div>
-            ) : (
-              <p className="auth-form-error">Google sign-in is not configured.</p>
-            )}
-            <p className="auth-terms">
-              By continuing, you agree to learn, explore, and have fun with Bunny.
-            </p>
+          <section className="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+            {authContent}
           </section>
         </div>
       )}
