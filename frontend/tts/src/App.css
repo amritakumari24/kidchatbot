@@ -397,8 +397,24 @@ html, body, #root { width: 100%; max-width: 100%; overflow-x: hidden; }
   box-shadow: 0 18px 42px var(--shadow);
 }
 
+.app-shell .bunny-stage {
+  flex: 0 0 clamp(180px, 30svh, 280px);
+  margin: 0 0 clamp(8px, 1.5vw, 16px);
+}
+
+.app-shell .bunny-video {
+  width: min(230px, 48%);
+  height: min(230px, 100%);
+  max-width: none;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 12px 30px var(--shadow);
+}
+
 .app-shell .welcome-panel {
-  min-height: clamp(300px, 52svh, 480px);
+  flex: 1 1 auto;
+  min-height: 0;
   padding: clamp(22px, 5vw, 44px) clamp(14px, 4vw, 28px);
 }
 
@@ -408,6 +424,7 @@ html, body, #root { width: 100%; max-width: 100%; overflow-x: hidden; }
 .app-shell .welcome-kicker { color: var(--accent-strong); }
 
 .app-shell .chat-area {
+  flex: 1 1 auto;
   min-height: 0;
   max-height: none;
   padding: clamp(12px, 2vw, 20px) 0 10px;
@@ -468,6 +485,8 @@ html, body, #root { width: 100%; max-width: 100%; overflow-x: hidden; }
   .app-shell .brand-copy span { display: none; }
   .app-shell .chat-panel { width: 100%; height: calc(100svh - 58px); min-height: 0; padding: 14px 12px 16px; border-radius: 0; box-shadow: none; }
   .app-shell .chat-area { min-height: 0; padding: 14px 4px 8px; }
+  .app-shell .bunny-stage { flex-basis: clamp(150px, 25svh, 210px); }
+  .app-shell .bunny-video { width: min(180px, 58%); height: min(180px, 100%); }
   .app-shell .assistant-bubble, .app-shell .user-bubble { max-width: 88%; font-size: 0.9rem; }
   .app-shell .composer-box { border-radius: 18px; }
   .app-shell .bunny-status { left: 8px; max-width: calc(100% - 16px); }

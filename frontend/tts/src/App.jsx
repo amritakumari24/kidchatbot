@@ -75,7 +75,7 @@ function Chatbot() {
   const [speaking, setSpeaking] = useState(false);
   const [speechPaused, setSpeechPaused] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [theme, setTheme] = useState(
     () => localStorage.getItem("talky-theme") || "light",
   );
@@ -454,6 +454,30 @@ function Chatbot() {
         <main
           className={`chat-panel ${hasStarted ? "chat-started" : "chat-idle"}`}
         >
+          <div
+            className={`bunny-stage ${speaking && !speechPaused ? "bunny-stage-speaking" : ""}`}
+          >
+            <video
+              ref={bunnyVideoRef}
+              className="bunny-video"
+              src="/finalbunnyy.mp4"
+              muted
+              playsInline
+              loop
+              preload="metadata"
+              aria-label="Bunny speaking"
+            />
+            <div className="bunny-status">
+              <span className="sound-bars" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+              {speaking && !speechPaused
+                ? "Bunny is speaking..."
+                : "Bunny is ready to listen"}
+            </div>
+          </div>
           {hasStarted ? (
             <div className="chat-area" ref={chatRef}>
               <div className="timeline">
@@ -547,32 +571,6 @@ function Chatbot() {
                 You can type your question or just tap the microphone and talk
                 to me.
               </p>
-            </div>
-          )}
-          {hasStarted && (
-            <div
-              className={`bunny-stage ${speaking && !speechPaused ? "bunny-stage-speaking" : ""}`}
-            >
-              <video
-                ref={bunnyVideoRef}
-                className="bunny-video"
-                src="/finalbunnyy.mp4"
-                muted
-                playsInline
-                loop
-                preload="metadata"
-                aria-label="Bunny speaking"
-              />
-              <div className="bunny-status">
-                <span className="sound-bars" aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                {speaking && !speechPaused
-                  ? "Bunny is speaking..."
-                  : "Bunny is ready to listen"}
-              </div>
             </div>
           )}
           {!hasStarted && (
